@@ -1,0 +1,39 @@
+@Service
+@Transactional
+public class OrderService {
+
+    @Autowired
+    private ProductRepository productRepository;
+    
+    @Autowired
+    private OrderRepository orderRepository;
+
+    public Order placeOrder(List<OrderItem> requestedItems) {
+        Order order = new Order();
+        double total = 0;
+
+        for (OrderItem item : requestedItems) {
+            Product product = productRepository.findById(item.getProduct().getId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+            // Validation: Check Stock
+            if (product.getStockQuantity() < item.getQuantity()) {
+                throw new RuntimeException("Insufficient stock for: " + product.getName());
+            }
+
+            // Logic: Deduct Stock
+            product.setStockQuantity(product.getStockQuantity() - item.getQuantity());
+            productRepository.save(product);
+
+            // Set current price and calculate total
+            item.setPriceAtPurchase(product.getPrice());
+            total += (product.getPrice() * item.getQuantity());
+        }
+
+        order.setItems(requestedItems);
+        order.setTotalAmount(total);
+        order.setStatus("PAID");
+        
+        return orderRepository.save(order);
+    }
+}
