@@ -1,0 +1,8 @@
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    // Search functionality requirement
+    List<Product> findByNameContainingIgnoreCase(String name);
+}
+
+@Repository
+public interface OrderRepository extends JpaRepository<Order, Long> {}
