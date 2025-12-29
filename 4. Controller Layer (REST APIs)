@@ -1,0 +1,33 @@
+@RestController
+@RequestMapping("/api")
+public class EcommerceController {
+
+    @Autowired
+    private ProductRepository productRepository;
+    
+    @Autowired
+    private OrderService orderService;
+
+    // 1. Product Catalog & Search
+    @GetMapping("/products")
+    public List<Product> getProducts(@RequestParam(required = false) String search) {
+        if (search != null) {
+            return productRepository.findByNameContainingIgnoreCase(search);
+        }
+        return productRepository.findAll();
+    }
+
+    // 2. Order Processing
+    @PostMapping("/orders")
+    public ResponseEntity<Order> checkout(@RequestBody List<OrderItem> items) {
+        Order savedOrder = orderService.placeOrder(items);
+        return ResponseEntity.ok(savedOrder);
+    }
+
+    // 3. Admin: Add Product
+    @PostMapping("/admin/products")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Product addProduct(@RequestBody Product product) {
+        return productRepository.save(product);
+    }
+}
